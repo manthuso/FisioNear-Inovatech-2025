@@ -1,5 +1,5 @@
 import './App.css';
-import logo from './assets/fisionearprev.png';
+import logo from './assets/icones/fn.png';
 import { FaDumbbell } from 'react-icons/fa';
 import { IoIosHeartEmpty } from 'react-icons/io';
 import { TbProgressCheck } from 'react-icons/tb';
