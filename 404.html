@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Redirecionando...</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="refresh" content="0; url=./" />
+    <script>
+      // SPA fallback para GitHub Pages preservando rota original caso venha futuramente a usar rotas
+      (function() {
+        var l = window.location;
+        if (l.pathname !== '/' && !l.pathname.endsWith('/fisiotech-landingpage/')) {
+          sessionStorage.setItem('spa_redirect', l.pathname + l.search + l.hash);
+        }
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>
