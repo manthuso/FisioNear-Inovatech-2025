@@ -9,7 +9,7 @@ export default function Login() {
   const [erro, setErro] = useState('')
   const navigate = useNavigate()
 
-  const API_BASE = import.meta.env.VITE_API_URL || '' // ex: https://sua-api.com
+  const API_BASE = import.meta.env.VITE_API_URL || ''
 
   async function onSubmit(e) {
     e.preventDefault()
@@ -19,8 +19,6 @@ export default function Login() {
       const res = await fetch(`${API_BASE}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // se usar sessão por cookie, habilite:
-        // credentials: 'include',
         body: JSON.stringify({ email, senha }),
       })
       if (!res.ok) {
