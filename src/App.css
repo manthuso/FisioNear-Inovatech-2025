@@ -2,12 +2,12 @@
 body {
   font-family: 'Poppins', sans-serif;
 }
-/* Paleta verde meio claro */
+
 :root {
-  --primary: #66BB6A;       /* verde meio claro */
-  --primaryLight: #A5D6A7;  /* verde claro suave */
-  --primaryDark: #2E7D32;   /* verde mais escuro para hover */
-  --backgroundSoft: #F6FFF9;/* fundo suave esverdeado */
+  --primary: #8ea598;       
+  --primaryLight: #A5D6A7;  
+  --primaryDark: #c6e4c7;   
+  --backgroundSoft: #F6FFF9;
 }
 
 h1, h2, h3 {
@@ -22,7 +22,7 @@ header {
   left: 0;
   width: 100%;
   display: flex;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: #8ea598;
   backdrop-filter: blur(10px);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   justify-content: space-between;
@@ -33,7 +33,7 @@ header {
 }
 
 .logo {
-  height: 55px;
+  height: 60px;
   padding: 0;
   width: auto;
 }
@@ -62,7 +62,7 @@ nav a:hover {
 
 .hero-section {
   position: relative;
-  padding-top: 80px;
+  padding-top: 100px;
   width: 100%;
   background-image: url('./assets/image.png');
     background-size: cover;
@@ -73,7 +73,8 @@ nav a:hover {
     align-items: center;
     color: white;
     text-align: center;
-    padding: 0 20px;
+    padding-left: 20px;
+    padding-right: 20px;
     height: auto;
     min-height: 100vh;
     padding-bottom: 70px;
@@ -160,7 +161,7 @@ nav a:hover {
     background-color: var(--primaryDark);
   } 
 
-  /* Variante outline para links/botões secundários */
+  
   .cta-button.outline {
     background: transparent;
     color: var(--primary);
