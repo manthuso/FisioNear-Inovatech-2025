@@ -6,6 +6,7 @@ import { TbProgressCheck } from 'react-icons/tb';
 import { useRef, useEffect, useState } from 'react';
 import { Routes, Route, Link } from 'react-router-dom'
 import Login from './pages/Login.jsx'
+import Teste from './pages/teste.jsx'
 
 // Home com o conteúdo atual
 function Home() {
@@ -84,6 +85,7 @@ function App() {
         <Routes>
           <Route index element={<Home />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/teste" element={<Teste />} />
         </Routes>
       </main>
     </div>
