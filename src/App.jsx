@@ -39,7 +39,10 @@ function Home() {
     <section className="hero-section">
       <h1><span className="highlight">Fisioterapia</span> Guiada por IA</h1>
       <p>Exercícios personalizados e feedback em tempo real para sua recuperação, no conforto da sua casa</p>
-      <Link to="/login" className="cta-button">Comece agora!</Link>
+        <div className="botoes-container">
+          <Link to="/login" className="cta-button">Faça Login ou Cadastre-se!</Link>
+          <Link to="/teste" className="cta-button outline">Testar agora</Link>
+        </div>
 
       <section className="feature-section">
         <h2> O que nossa IA pode fazer por você</h2>
