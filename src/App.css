@@ -145,8 +145,21 @@ nav a:hover {
     margin-bottom: 20px;
   }
 
+.botoes-container {
+    display: flex;
+    gap: 20px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    justify-content: center;
+  }
+
+
   .cta-button {
     background-color: var(--primary);
+
+    min-width: 250px;
+    text-align: center;
+    font-weight: 600;
     color: white;
     padding: 15px 30px;
     border: none;
@@ -271,6 +284,7 @@ nav a:hover {
     .cta-button {
       padding: 12px 24px;
       font-size: 1rem;
+      
     }
     .feature-container {
       gap: 24px;
