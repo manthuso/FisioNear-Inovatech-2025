@@ -16,6 +16,19 @@ export default function PoseDetector() {
   const rafIdRef = useRef(null)
   const isProcessingRef = useRef(false)
 
+  // Estado para saber qual botão está pintado de azul (Visual)
+  const [currentExercise, setCurrentExercise] = useState('biceps') 
+  
+  // Ref para o MediaPipe ler instantaneamente sem travar (Lógica)
+  const exerciseModeRef = useRef('biceps') 
+
+  // Função que o botão vai chamar ao ser clicado
+  const changeExercise = (newExercise) => {
+    setCurrentExercise(newExercise)      // Atualiza visual
+    exerciseModeRef.current = newExercise // Atualiza lógica interna
+    resetExercise()                      // Zera contagem
+  }
+
   // Inicia/reativa a câmera com o deviceId escolhido
   const startCamera = useCallback(async (deviceId) => {
     // parar stream anterior
@@ -83,26 +96,48 @@ export default function PoseDetector() {
 
           if (results.poseLandmarks) {
             const lm = results.poseLandmarks
-            const shoulder = lm[11]
-            const elbow = lm[13]
-            const wrist = lm[15]
+            const shoulder = lm[11] //ombro
+            const elbow = lm[13] //cotovelo
+            const wrist = lm[15] //pulso
+            const hip = lm[23] //quadril
 
             const angle = calculateAngle(shoulder, elbow, wrist)
+            const bicepsAngle = calculateAngle(shoulder, elbow, wrist)
+            const formAngle = calculateAngle(hip, shoulder, elbow)
 
             ctx.fillStyle = '#fff'
             ctx.font = 'bold 24px Arial'
-            ctx.fillText(`${angle.toFixed(0)}°`, 10, 40)
+            ctx.fillText(`Bíceps: ${bicepsAngle.toFixed(0)}°`, 10, 40)
+            ctx.fillText(`Postura: ${formAngle.toFixed(0)}°`, 10, 70)
 
-            if (angle > 160 && stageRef.current !== 'down') {
+            const isFormCorrect = formAngle < 30
+
+            if (!isFormCorrect) {
+              ctx.fillStyle = '#ff0000'
+                ctx.fillText(`⚠️ COTOVELO MOVEL! (${formAngle.toFixed(0)}°)`, 10, 80)
+                setMessage('Mantenha o cotovelo parado!')
+            } else {
+                ctx.fillStyle = '#00ff00'
+                ctx.fillText(`Postura OK`, 10, 80)
+            }
+
+            // estado down = braço esticado
+            if (bicepsAngle > 160) {
               stageRef.current = 'down'
-              setMessage('Braço esticado')
+              if(isFormCorrect) setMessage('Puxe!')
             }
-            if (angle < 40 && stageRef.current === 'down') {
-              stageRef.current = 'up'
-              setCount(c => c + 1)
-              setMessage('REPETIÇÃO!')
-            }
+            if (bicepsAngle < 50 && stageRef.current === 'down') {
+                if (isFormCorrect) {
+                    stageRef.current = 'up'
+                    setCount(c => c + 1)
+                    setMessage('BOA!')
+                } else {
+                    
+                    setMessage('Roubo de movimento')
 
+                  }
+            }
+            const color = isFormCorrect ? '#00ff00' : '#ff0000'
             drawConnectors(ctx, lm, POSE_CONNECTIONS, { color: '#00ff00', lineWidth: 4 })
             drawLandmarks(ctx, lm, { color: '#ff0000', lineWidth: 2, radius: 4 })
           }
@@ -199,7 +234,7 @@ export default function PoseDetector() {
 
   return (
     <div style={{ padding: 60, backgroundColor: '#1a1a1a', minHeight: '100vh' }}>
-      <h1 style={{ color: '#fff' }}>Contador de Flexões</h1>
+      <h1 style={{ color: '#fff' }}>Exercicios</h1>
 
       <div style={{
         display: 'flex',
