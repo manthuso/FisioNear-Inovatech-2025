@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">FisioNear</div>
+        <div class="user-info">
+            <i class="bi bi-person-circle"></i>
+            <span>Bem vindo, (usuario)!</span>
+        </div>
+        <div class="header-actions">
+            <button class="icon-btn" id="notificationBtn">
+                <i class="bi bi-bell"></i>
+                <span class="notification-badge">3</span>
+            </button>
+            <button class="icon-btn" id="documentsBtn">
+                <i class="bi bi-folder"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav>
+               
+                <a href="fisio.html" class="nav-item" data-section="consultas">
+                    <i class="bi bi-calendar-check"></i>
+                    <span>consultas</span>
+                </a>
+                <a href="listaP.html" class="nav-item" data-section="exercicios">
+                    <i class="bi bi-activity"></i>
+                    <span>exercícios</span>
+                </a>
+
+                </a>
+                <a href="monitoria.html" class="nav-item" data-section="monitoria">
+                    <i class="bi bi-graph-up"></i>
+                    <span>Monitoria</span>
+                </a>
+                <a href="#" class="nav-item" data-section="configuracoes">
+                    <i class="bi bi-gear"></i>
+                    <span>configurações</span>
+                </a>
+            </nav>
+        </aside>
+
+
+   <!-- CONTEÚDO PRINCIPAL -->
+ 
+    <div class="container mt-4">
+<!-- Patients List Section -->
+            <div id="pacientesSection" class="section-content">
+                <div class="patients-container">
+                    <div class="section-header">
+                        <h2 class="section-title">Cadastro de Pacientes</h2>
+                        <button class="btn-add-patient" id="btnAddPatient">
+                            <i class="bi bi-plus-circle"></i>
+                            Novo Paciente
+                        </button>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="patients-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>CPF</th>
+                                    <th>Telefone</th>
+                                    <th>Email</th>
+                                    <th>Data Cadastro</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="patientsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patient Details Section -->
+            <div id="patientDetailsSection" class="section-content">
+                <div class="patient-details-container">
+                    <button class="btn-back" id="backToPatients">
+                        <i class="bi bi-arrow-left"></i>
+                        Voltar
+                    </button>
+
+                    <div class="patient-details-content" id="patientDetailsContent"></div>
+                </div>
+            </div>
+
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+
+</body>
+</html>
