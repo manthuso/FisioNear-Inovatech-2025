@@ -163,10 +163,34 @@
                             <i class="bi bi-arrow-clockwise"></i>
                             Refazer
                         </button>
+                        <button onclick="chamaModalCamera()" class="btn-redo" id="btnCam">
+                            <i class="bi bi-arrow-clockwise"></i>
+                            Abrir Câmera
+                        </button>
                     </div>
                 </div>
             </div>
 
+            <!--modal da camera-->
+                <div id="modal_camera_treino" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="container-fluid default-page">
+                            <div class="modal-content">
+                                
+                                <div class="modal-header d-flex justify-content-between">                                                                                                           
+                                    <h5 class="modal-title me-auto">Câmera de Treino</h5>
+                                    <button type="button" class="btn-close me-2" data-bs-dismiss="modal" aria-label="Close"></button>                                     
+                                </div> 
+                                <div class="modal-body">
+                                    <video id="video" autoplay="true"></video>
+                                </div>
+                                <div class="modal-footer d-flex justify-content-center">
+                                    <button type="button" onclick="" class="btn-redo">Iniciar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
             <!-- Monitoria Section -->
             <div id="monitoriaSection" class="section-content">
@@ -435,3 +459,9 @@
     <script src="script.js"></script>
 </body>
 </html>
+<script>
+    function chamaModalCamera(){
+        const modal = new bootstrap.Modal(document.getElementById("modal_camera_treino"));
+        modal.show();
+    }
+</script>
