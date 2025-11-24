@@ -7,6 +7,7 @@ import { useRef, useEffect, useState } from 'react';
 import { Routes, Route, Link } from 'react-router-dom'
 import Login from './pages/Login.jsx'
 import Teste from './pages/teste.jsx'
+import Footer from './components/Footer.jsx'
 
 // Home com o conteúdo atual
 function Home() {
@@ -88,6 +89,7 @@ function App() {
           <Route path="/teste" element={<Teste />} />
         </Routes>
       </main>
+      <Footer />
     </div>
   );
 }
