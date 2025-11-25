@@ -1,6 +1,10 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { FaDumbbell, FaRunning, FaTimes } from 'react-icons/fa'
+import { FaDumbbell, FaRunning, FaTimes, FaChild } from 'react-icons/fa'
+import { processBiceps } from '../exercises/BicepsCurl'
+import { processSquat } from '../exercises/Squat'
+import { processStretching } from '../exercises/Stretching'
+import ExerciseSelector from '../components/ExerciseSelector'
 
 export default function PoseDetector() {
   const [count, setCount] = useState(0)
@@ -11,8 +15,44 @@ export default function PoseDetector() {
   const [showModal, setShowModal] = useState(true)
   const [stream, setStream] = useState(null)
   
+  // --- Workout State ---
+  const [workoutStats, setWorkoutStats] = useState({
+    sets: 0,
+    reps: 0,
+    calories: 0,
+    isResting: false,
+    restTime: 30,
+    finished: false
+  })
+  const [personalRecord, setPersonalRecord] = useState(0)
+
   const stageRef = useRef('down') 
   const fpsCounterRef = useRef({ frames: 0, lastTime: Date.now() })
+  
+  // Refs para lógica do loop (evitar stale closures)
+  const workoutRef = useRef({
+    sets: 0,
+    reps: 0,
+    calories: 0,
+    isResting: false,
+    finished: false
+  })
+  const recordRef = useRef(0)
+  
+  // Ref para suavização de ângulos (EMA)
+  const smoothedAnglesRef = useRef({
+    biceps: 160,
+    elbowForm: 180,
+    knee: 180,
+    hip: 180
+  })
+  
+  // Ref para dados específicos do exercício (ex: timer de alongamento)
+  const exerciseDataRef = useRef({})
+
+  const TARGET_REPS = 12
+  const TARGET_SETS = 3
+  const REST_TIME = 30
 
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
@@ -24,16 +64,52 @@ export default function PoseDetector() {
   const [currentExercise, setCurrentExercise] = useState('biceps') 
   const exerciseModeRef = useRef('biceps') 
 
-  // Calculo de angulo
-  const calculateAngle = (a, b, c) => {
-    const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x)
-    let angle = Math.abs(radians * 180.0 / Math.PI)
-    if (angle > 180) angle = 360 - angle
-    return angle
-  }
+  // Carregar Recorde
+  useEffect(() => {
+    const saved = localStorage.getItem(`record_${currentExercise}`)
+    const val = saved ? parseInt(saved) : 0
+    setPersonalRecord(val)
+    recordRef.current = val
+  }, [currentExercise])
+
+  // Timer de Descanso
+  useEffect(() => {
+    let interval
+    if (workoutStats.isResting && workoutStats.restTime > 0) {
+      interval = setInterval(() => {
+        setWorkoutStats(prev => {
+            if (prev.restTime <= 1) {
+                // Fim do descanso
+                workoutRef.current.isResting = false
+                setMessage('VOLTANDO!')
+                return { ...prev, isResting: false, restTime: REST_TIME }
+            }
+            return { ...prev, restTime: prev.restTime - 1 }
+        })
+      }, 1000)
+    }
+    return () => clearInterval(interval)
+  }, [workoutStats.isResting])
 
   const resetExercise = useCallback(() => {
-    setCount(0)
+    // Reset Refs
+    workoutRef.current = {
+        sets: 0,
+        reps: 0,
+        calories: 0,
+        isResting: false,
+        finished: false
+    }
+    exerciseDataRef.current = {}
+    // Reset State
+    setWorkoutStats({
+        sets: 0,
+        reps: 0,
+        calories: 0,
+        isResting: false,
+        restTime: REST_TIME,
+        finished: false
+    })
     setMessage('Inicie o exercício')
     stageRef.current = exerciseModeRef.current === 'squat' ? 'up' : 'down'
     
@@ -48,118 +124,50 @@ export default function PoseDetector() {
     resetExercise()
   }
 
-//Exercicio de Biceps:
-  const processBiceps = (lm, ctx) => {
-    const shoulder = lm[11] // Ombro esquerdo
-    const elbow = lm[13] // Cotovelo esquerdo
-    const wrist = lm[15] // Pulso esquerdo
-    const hip = lm[23] // Quadril esquerdo
+  const handleRepCompletion = (exerciseType) => {
+    const w = workoutRef.current
+    if (w.isResting || w.finished) return
 
-    // Check visibility
-    if (shoulder.visibility < 0.5 || elbow.visibility < 0.5 || wrist.visibility < 0.5) {
-        ctx.fillStyle = '#ffff00'
-        ctx.font = 'bold 24px Arial'
-        ctx.fillText('Posicione-se melhor', 10, 40)
-        return false
-    }
+    w.reps += 1
+    // METs estimados: Biceps ~3.5 METs, Squat ~5.0 METs. 
+    // Formula simplificada: kcal = rep * fator
+    const calPerRep = exerciseType === 'squat' ? 0.15 : 0.05
+    w.calories += calPerRep
 
-    const bicepsAngle = calculateAngle(shoulder, elbow, wrist)
-    const formAngle = calculateAngle(hip, shoulder, elbow) // Postura do cotovelo
-
-    ctx.fillStyle = '#fff'
-    ctx.font = 'bold 24px Arial'
-    ctx.fillText(`Bíceps: ${bicepsAngle.toFixed(0)}°`, 10, 40)
-    ctx.fillText(`Postura: ${formAngle.toFixed(0)}°`, 10, 70)
-
-    // validador da postura
-    const isFormCorrect = formAngle < 35
-
-    if (!isFormCorrect) {
-        ctx.fillStyle = '#ff0000'
-        ctx.fillText(`MANTENHA O COTOVELO FIXO`, 10, 100)
-        setMessage('Arrume a postura!')
-    } else {
-        ctx.fillStyle = '#00ff00'
-        ctx.fillText(`Postura OK`, 10, 100)
-    }
-
-    if (bicepsAngle > 160) {
-        stageRef.current = 'down'
-        if(isFormCorrect) setMessage('Puxe!')
-    } else if (bicepsAngle > 50 && stageRef.current === 'up') {
-        setMessage('Estique tudo!')
-    }
-
-    if (bicepsAngle < 40 && stageRef.current === 'down') {
-        if (isFormCorrect) {
-            stageRef.current = 'up'
-            setCount(c => c + 1)
-            setMessage('BOA!')
+    // Check Set
+    if (w.reps >= TARGET_REPS) {
+        w.sets += 1
+        w.reps = 0
+        
+        if (w.sets >= TARGET_SETS) {
+            w.finished = true
+            setMessage('TREINO CONCLUÍDO!')
         } else {
-            setMessage('Roubou (Postura)')
+            w.isResting = true
+            setMessage('DESCANSO!')
         }
-    } else if (bicepsAngle < 90 && stageRef.current === 'down') {
-         if(isFormCorrect) setMessage('Mais alto!')
-    }
-    return isFormCorrect
-  }
-//-------------EXERCICIOS (preguiça de fzr o lado direito) -----------------------------------------------//
-  // Agachamento:
-  const processSquat = (lm, ctx) => {
-    const hip = lm[23] // Quadril esquerdo
-    const knee = lm[25] // Joelho esquerdo
-    const ankle = lm[27] // Tornozelo esquerdo
-    const shoulder = lm[11] // Ombro esquerdo
-
-    // Check visibility
-    if (hip.visibility < 0.5 || knee.visibility < 0.6 || ankle.visibility < 0.6) {
-        ctx.fillStyle = '#ffff00'
-        ctx.font = 'bold 24px Arial'
-        ctx.fillText('Posicione-se melhor (Corpo inteiro)', 10, 40)
-        return false
-    }
-
-    const kneeAngle = calculateAngle(hip, knee, ankle)
-    const hipAngle = calculateAngle(shoulder, hip, knee) // Tronco
-
-    ctx.fillStyle = '#fff'
-    ctx.font = 'bold 24px Arial'
-    ctx.fillText(`Joelho: ${kneeAngle.toFixed(0)}°`, 10, 40)
-    ctx.fillText(`Tronco: ${hipAngle.toFixed(0)}°`, 10, 70)
-
-    // Validador de postura 
-    const isFormCorrect = hipAngle > 80 
-
-    if (!isFormCorrect) {
-        ctx.fillStyle = '#ff0000'
-        ctx.fillText(`MANTENHA O TRONCO ERETO`, 10, 100)
-        setMessage('Arrume a postura!')
     } else {
-        ctx.fillStyle = '#00ff00'
-        ctx.fillText(`Postura OK`, 10, 100)
+        setMessage('BOA!')
     }
 
-    // Em pé (> 160) -> "up" -> up é considerado posição inicial ou descanso
-    if (kneeAngle > 160) {
-        stageRef.current = 'up'
-        if(isFormCorrect) setMessage('Agache!')
+    // Update State for UI
+    setWorkoutStats(prev => ({
+        ...prev,
+        sets: w.sets,
+        reps: w.reps,
+        calories: w.calories,
+        isResting: w.isResting,
+        finished: w.finished
+    }))
+
+    // Record Logic
+    const currentSessionReps = (w.sets * TARGET_REPS) + w.reps
+    if (currentSessionReps > recordRef.current) {
+        recordRef.current = currentSessionReps
+        setPersonalRecord(currentSessionReps)
+        localStorage.setItem(`record_${exerciseType}`, currentSessionReps.toString())
     }
-    // Agachado (< 90) e estava "up" -> CONTA
-    if (kneeAngle < 100 && stageRef.current === 'up') {
-        if (isFormCorrect) {
-            stageRef.current = 'down'
-            setCount(c => c + 1)
-            setMessage('SUBIU!')
-        } else {
-             setMessage('Roubou (Postura)')
-        }
-    } else if (kneeAngle < 140 && stageRef.current === 'up') {
-        if(isFormCorrect) setMessage('Mais baixo!')
-    }
-    
-    return isFormCorrect 
   }
-  //-------------------------------------------------------------//
 
   const startCamera = useCallback(async (deviceId) => {
     if (videoRef.current?.srcObject) {
@@ -227,17 +235,22 @@ export default function PoseDetector() {
             const lm = results.poseLandmarks
             let isCorrect = true
             
+            const refs = { stageRef, smoothedAnglesRef, exerciseDataRef }
+            const callbacks = { setMessage, handleRepCompletion }
 
             //switch de exercicio
             switch (exerciseModeRef.current) {
                 case 'biceps':
-                    isCorrect = processBiceps(lm, ctx)
+                    isCorrect = processBiceps(lm, ctx, refs, callbacks)
                     break
                 case 'squat':
-                    isCorrect = processSquat(lm, ctx)
+                    isCorrect = processSquat(lm, ctx, refs, callbacks)
+                    break
+                case 'stretching':
+                    isCorrect = processStretching(lm, ctx, refs, callbacks)
                     break
                 default:
-                    isCorrect = processBiceps(lm, ctx)
+                    isCorrect = processBiceps(lm, ctx, refs, callbacks)
                     break
             }
 
@@ -335,54 +348,41 @@ export default function PoseDetector() {
         color: '#fff',
         marginBottom: 16
       }}>
-        <div>Contagem: <span style={{ color: 'var(--primary)' }}>{count}</span></div>
+        <div style={{ background: '#333', padding: '8px 16px', borderRadius: '8px' }}>
+            Série: <span style={{ color: 'var(--primary)' }}>{workoutStats.sets + 1}/{TARGET_SETS}</span>
+        </div>
+        <div style={{ background: '#333', padding: '8px 16px', borderRadius: '8px' }}>
+            Reps: <span style={{ color: 'var(--primary)' }}>{workoutStats.reps}/{TARGET_REPS}</span>
+        </div>
+        <div style={{ background: '#333', padding: '8px 16px', borderRadius: '8px' }}>
+            Calorias: <span style={{ color: '#f59e0b' }}>{workoutStats.calories.toFixed(1)} kcal</span>
+        </div>
+        <div style={{ background: '#333', padding: '8px 16px', borderRadius: '8px' }}>
+            Recorde: <span style={{ color: '#10b981' }}>{personalRecord}</span>
+        </div>
         <div>Status: {message}</div>
-        <div style={{ color: fps > 15 ? '#0f0' : '#f00' }}>FPS: {fps}</div>
       </div>
 
       {/* Modal de Seleção */}
       {showModal && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999,
-          display: 'flex', justifyContent: 'center', alignItems: 'center',
-          backdropFilter: 'blur(5px)'
-        }}>
-          <div className="feature-item animate" style={{
-            width: '90%', maxWidth: '800px', color: '#fff',
-            display: 'flex', flexDirection: 'row', gap: '30px', padding: '40px',
-            alignItems: 'flex-start', position: 'relative'
-          }}>
-            
-      {/* x de fechar */}
-            <button 
-                onClick={() => setShowModal(false)}
-                style={{
-                    position: 'absolute', top: '15px', right: '15px',
-                    background: 'transparent', border: 'none', color: '#fff',
-                    cursor: 'pointer', fontSize: '20px'
-                }}
-            >
-                <FaTimes />
-            </button>
-
-            {/*  Opções */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px', textAlign: 'left' }}>
-                <h2 style={{ marginBottom: '10px', fontSize: '28px', color: '#fff' }}>Configuração</h2>
-                
-                <div style={{ width: '100%' }}>
-                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#ccc' }}>Câmera:</label>
-                    <select
-                        value={selectedDeviceId}
+        <div className="setup-modal-overlay">
+          <div className="setup-modal">
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              
+              <div style={{ 
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
+                  background: '#222', padding: '15px', borderRadius: '12px', border: '1px solid #444' 
+              }}>
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px', width: '100%' }}>
+                    <span style={{ color: '#fff', fontWeight: 600, whiteSpace: 'nowrap' }}>📷 Câmera:</span>
+                    <select 
+                        value={selectedDeviceId} 
                         onChange={onChangeCamera}
-                        style={{
-                        width: '100%',
-                        padding: '12px',
-                        borderRadius: 8,
-                        border: '1px solid #555',
-                        background: '#333',
-                        color: '#fff',
-                        fontSize: '16px'
+                        style={{ 
+                            flex: 1,
+                            padding: '10px', borderRadius: '6px', 
+                            border: '1px solid #555', backgroundColor: '#333', color: '#fff', fontSize: '14px',
+                            outline: 'none', cursor: 'pointer'
                         }}
                     >
                         {devices.map((d, i) => (
@@ -391,70 +391,14 @@ export default function PoseDetector() {
                         </option>
                         ))}
                     </select>
-                </div>
+                 </div>
+              </div>
 
-                <div style={{ width: '100%' }}>
-                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#ccc' }}>Exercício:</label>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <button 
-                        onClick={() => { changeExercise('biceps'); setShowModal(false); }}
-                        className="cta-button"
-                        style={{ 
-                            width: '100%', fontSize: '16px', minWidth: 'unset',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
-                        }}
-                    >
-                        <FaDumbbell size={20} /> Rosca Direta
-                    </button>
-                    <button 
-                        onClick={() => { changeExercise('squat'); setShowModal(false); }}
-                        className="cta-button"
-                        style={{ 
-                            width: '100%', fontSize: '16px', backgroundColor: 'var(--primaryDark)', minWidth: 'unset',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
-                        }}
-                    >
-                        <FaRunning size={20} /> Agachamento
-                    </button>
-                    </div>
-                </div>
+              <ExerciseSelector onSelectExercise={(exId) => {
+                  changeExercise(exId);
+                  setShowModal(false);
+              }} />
             </div>
-
-            {/* camera modalll */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#ccc', textAlign: 'left' }}>Preview:</label>
-                <div style={{ 
-                    width: '100%', 
-                    height: '300px', 
-                    backgroundColor: '#000', 
-                    borderRadius: '12px', 
-                    overflow: 'hidden',
-                    border: '2px solid #444',
-                    position: 'relative'
-                }}>
-                    {stream ? (
-                        <video 
-                            ref={onModalVideoRef}
-                            autoPlay 
-                            playsInline 
-                            muted 
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                        />
-                    ) : (
-                        <div style={{ 
-                            width: '100%', 
-                            height: '100%', 
-                            display: 'flex', 
-                            justifyContent: 'center', 
-                            alignItems: 'center', 
-                            color: '#666' 
-                        }}>
-                            Carregando câmera...
-                        </div>
-                    )}
-                </div>
-            </div>
-
           </div>
         </div>
       )}
@@ -466,23 +410,57 @@ export default function PoseDetector() {
           className="cta-button"
           style={{ minWidth: 'unset', padding: '10px 30px' }}
         >
-          Trocar Exercício: {currentExercise === 'biceps' ? 'Rosca Direta' : 'Agachamento'}
+          Trocar Exercício: {currentExercise === 'biceps' ? 'Rosca Direta' : currentExercise === 'squat' ? 'Agachamento' : 'Alongamento'}
         </button>
       </div>
 
-      <div style={{ position: 'relative', width: 640, height: 480, margin: '0 auto' }}>
+      <div className="pose-container">
         <video ref={videoRef} style={{ display: 'none' }} playsInline muted autoPlay />
         <canvas
           ref={canvasRef}
           width={640}
           height={480}
-          style={{
-            border: '3px solid var(--primary)',
-            borderRadius: 12,
-            backgroundColor: '#000',
-            display: 'block'
-          }}
+          className="pose-canvas"
         />
+        
+        {/* Overlay de Descanso */}
+        {workoutStats.isResting && (
+            <div style={{
+                position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                backgroundColor: 'rgba(0,0,0,0.8)', borderRadius: 12,
+                display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+                color: '#fff', zIndex: 10
+            }}>
+                <h2 style={{ fontSize: '48px', marginBottom: '10px' }}>DESCANSO</h2>
+                <div style={{ fontSize: '80px', fontWeight: 'bold', color: 'var(--primary)' }}>
+                    {workoutStats.restTime}s
+                </div>
+                <p style={{ fontSize: '20px', marginTop: '10px' }}>Respire fundo...</p>
+            </div>
+        )}
+
+        {/* Overlay de Fim de Treino */}
+        {workoutStats.finished && (
+            <div style={{
+                position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                backgroundColor: 'rgba(0,0,0,0.9)', borderRadius: 12,
+                display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+                color: '#fff', zIndex: 10
+            }}>
+                <h2 style={{ fontSize: '40px', marginBottom: '20px', color: 'var(--primary)' }}>TREINO CONCLUÍDO!</h2>
+                <div style={{ textAlign: 'center', fontSize: '20px', lineHeight: '1.6' }}>
+                    <p>Total de Séries: {workoutStats.sets}</p>
+                    <p>Calorias Queimadas: {workoutStats.calories.toFixed(1)} kcal</p>
+                </div>
+                <button 
+                    onClick={resetExercise}
+                    className="cta-button"
+                    style={{ marginTop: '30px' }}
+                >
+                    Novo Treino
+                </button>
+            </div>
+        )}
       </div>
       
       <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 20 }}>
@@ -491,7 +469,7 @@ export default function PoseDetector() {
           type="button"
           onClick={resetExercise}
           className="cta-button outline"
-          style={{ background: 'transparent', border: '1px solid white', color: 'white', padding: '10px', borderRadius: 5, cursor: 'pointer'}}
+          style={{ color: 'white' }}
         >
           Reiniciar (R)
         </button>

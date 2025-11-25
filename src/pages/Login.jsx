@@ -37,7 +37,7 @@ export default function Login() {
 
   return (
     <section className="hero-section" style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
-      <div className="feature-item animate" style={{ width: 360 }}>
+      <div className="feature-item animate" style={{ width: '100%', maxWidth: '360px', padding: '20px' }}>
         <h3>Entrar</h3>
         <form onSubmit={onSubmit} style={{ width: '100%', display: 'grid', gap: 12 }}>
           <label style={{ color: '#fff', fontSize: 14 }}>
