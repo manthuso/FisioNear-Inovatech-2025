@@ -112,7 +112,7 @@ export default function PoseDetector() {
     const shoulder = lm[11] // Ombro esquerdo
 
     // Check visibility
-    if (hip.visibility < 0.5 || knee.visibility < 0.5 || ankle.visibility < 0.5) {
+    if (hip.visibility < 0.5 || knee.visibility < 0.6 || ankle.visibility < 0.6) {
         ctx.fillStyle = '#ffff00'
         ctx.font = 'bold 24px Arial'
         ctx.fillText('Posicione-se melhor (Corpo inteiro)', 10, 40)

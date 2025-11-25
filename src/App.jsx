@@ -7,6 +7,10 @@ import { useRef, useEffect, useState } from 'react';
 import { Routes, Route, Link } from 'react-router-dom'
 import Login from './pages/Login.jsx'
 import Teste from './pages/teste.jsx'
+import Fisio from './pages/Fisio.jsx'
+import ListaPacientes from './pages/ListaPacientes.jsx'
+import Monitoria from './pages/Monitoria.jsx'
+import Admin from './pages/Admin.jsx'
 import Footer from './components/Footer.jsx'
 
 // Home com o conteúdo atual
@@ -74,7 +78,15 @@ function App() {
         <img src={logo} alt="Logo Fisiotech" className="logo" />
         <nav>
           <ul>
-            <li><a href="#">Funcionalidades</a></li>
+            <li className="dropdown">
+              <a href="#" onClick={(e) => e.preventDefault()}>Funcionalidades</a>
+              <div className="dropdown-content">
+                <Link to="/fisio">Consultas</Link>
+                <Link to="/lista-pacientes">Pacientes</Link>
+                <Link to="/monitoria">Monitoria</Link>
+                <Link to="/admin">Admin</Link>
+              </div>
+            </li>
             <li><a href="#">Contato</a></li>
             <li><a href="#">Serviços</a></li>
             <li><Link to="/login">Login</Link></li>
@@ -87,6 +99,10 @@ function App() {
           <Route index element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/teste" element={<Teste />} />
+          <Route path="/fisio" element={<Fisio />} />
+          <Route path="/lista-pacientes" element={<ListaPacientes />} />
+          <Route path="/monitoria" element={<Monitoria />} />
+          <Route path="/admin" element={<Admin />} />
         </Routes>
       </main>
       <Footer />
