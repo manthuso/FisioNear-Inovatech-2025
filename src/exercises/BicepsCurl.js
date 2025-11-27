@@ -1,13 +1,15 @@
 import { calculateAngle, getPixelCoords, smoothValue, getColorForProgress, drawProgressArc, drawGhostLimb } from './utils'
 
-export const processBiceps = (lm, ctx, { stageRef, smoothedAnglesRef }, { setMessage, handleRepCompletion }) => {
+export const processBiceps = (lm, ctx, { stageRef, smoothedAnglesRef }, { setMessage, handleRepCompletion }, activeSide = 'left') => {
     const width = ctx.canvas.width
     const height = ctx.canvas.height
     
-    const shoulder = lm[11] // Ombro esquerdo
-    const elbow = lm[13] // Cotovelo esquerdo
-    const wrist = lm[15] // Pulso esquerdo
-    const hip = lm[23] // Quadril esquerdo
+    // Select landmarks based on active side
+    const isLeft = activeSide === 'left'
+    const shoulder = isLeft ? lm[11] : lm[12]
+    const elbow = isLeft ? lm[13] : lm[14]
+    const wrist = isLeft ? lm[15] : lm[16]
+    const hip = isLeft ? lm[23] : lm[24]
 
     // Check visibility
     if (shoulder.visibility < 0.5 || elbow.visibility < 0.5 || wrist.visibility < 0.5) {
@@ -18,9 +20,9 @@ export const processBiceps = (lm, ctx, { stageRef, smoothedAnglesRef }, { setMes
     }
 
     const rawBicepsAngle = calculateAngle(shoulder, elbow, wrist)
-    const rawFormAngle = calculateAngle(hip, shoulder, elbow) // Postura do cotovelo
+    const rawFormAngle = calculateAngle(hip, shoulder, elbow) 
 
-    // Aplicar suavização (EMA)
+    
     const bicepsAngle = smoothValue('biceps', rawBicepsAngle, smoothedAnglesRef.current)
     const formAngle = smoothValue('elbowForm', rawFormAngle, smoothedAnglesRef.current)
 
@@ -57,10 +59,10 @@ export const processBiceps = (lm, ctx, { stageRef, smoothedAnglesRef }, { setMes
         drawGhostLimb(ctx, pElbow, { x: targetWristX, y: targetWristY })
     }
 
-    // Texto de Feedback (Estilizado)
+    
     ctx.font = 'bold 20px Poppins, Arial'
     ctx.fillStyle = '#fff'
-    // Fundo do texto
+    
     ctx.fillStyle = 'rgba(0,0,0,0.5)'
     ctx.fillRect(5, 10, 220, 100)
     
@@ -80,7 +82,7 @@ export const processBiceps = (lm, ctx, { stageRef, smoothedAnglesRef }, { setMes
         ctx.fillText(`Postura OK`, 15, 100)
     }
 
-    if (bicepsAngle > 160) {
+    if (bicepsAngle > 150) {
         stageRef.current = 'down'
         if(isFormCorrect) setMessage('Puxe!')
     } else if (bicepsAngle > 50 && stageRef.current === 'up') {

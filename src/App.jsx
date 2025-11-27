@@ -11,6 +11,7 @@ import Fisio from './pages/Fisio.jsx'
 import ListaPacientes from './pages/ListaPacientes.jsx'
 import Monitoria from './pages/Monitoria.jsx'
 import Admin from './pages/Admin.jsx'
+import EmProducao from './pages/EmProducao.jsx'
 import Footer from './components/Footer.jsx'
 
 // Home com o conteúdo atual
@@ -75,7 +76,9 @@ function App() {
   return (
     <div>
       <header>
-        <img src={logo} alt="Logo Fisiotech" className="logo" />
+        <Link to="/">
+          <img src={logo} alt="Logo Fisiotech" className="logo" />
+        </Link>
         <nav>
           <ul>
             <li className="dropdown">
@@ -87,8 +90,8 @@ function App() {
                 <Link to="/admin">Admin</Link>
               </div>
             </li>
-            <li><a href="#">Contato</a></li>
-            <li><a href="#">Serviços</a></li>
+            <li><a href="https://www.instagram.com/fisionear" target="_blank" rel="noopener noreferrer">Contato</a></li>
+            <li><Link to="/em-producao">Serviços</Link></li>
             <li><Link to="/login">Login</Link></li>
           </ul>
         </nav>
@@ -103,6 +106,7 @@ function App() {
           <Route path="/lista-pacientes" element={<ListaPacientes />} />
           <Route path="/monitoria" element={<Monitoria />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/em-producao" element={<EmProducao />} />
         </Routes>
       </main>
       <Footer />

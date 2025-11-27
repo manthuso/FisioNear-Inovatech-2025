@@ -12,10 +12,10 @@ const availableExercises = [
       "Flexione os cotovelos levantando o peso",
       "Desça controladamente",
     ],
-    duration: 300, // estimativa
-    targetPoses: ["biceps_curl_up", "biceps_curl_down"],
+    duration: 300,
+    targetPoses: ["flexione o cotovelo", "estenda o cotovelo"],
     icon: <FaDumbbell size={24} />,
-    color: "#10b981" // Emerald
+    color: "#10b981" 
   },
   {
     id: "squat",
@@ -28,13 +28,13 @@ const availableExercises = [
       "Suba contraindo os glúteos",
     ],
     duration: 300,
-    targetPoses: ["squat_down", "squat_up"],
+    targetPoses: ["agache-se", "levante"],
     icon: <FaRunning size={24} />,
-    color: "#3b82f6" // Blue
+    color: "#3b82f6" 
   },
   {
     id: "stretching",
-    name: "Alongamento",
+    name: "Alongamento de Braços",
     description: "Alongamento de braços acima da cabeça.",
     instructions: [
       "Levante os braços acima da cabeça",
@@ -43,9 +43,9 @@ const availableExercises = [
       "Relaxe e repita",
     ],
     duration: 180,
-    targetPoses: ["arms_up", "hold"],
+    targetPoses: ["levante os braços", "segure"],
     icon: <FaChild size={24} />,
-    color: "#f59e0b" // Amber
+    color: "#f59e0b" 
   },
 ];
 
