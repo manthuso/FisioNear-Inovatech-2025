@@ -281,12 +281,17 @@ export default function PoseDetector() {
             fpsCounterRef.current.lastTime = now
           }
 
-          // Limpa e desenha frame
+          // Limpa e desenha frame (Espelhado)
           ctx.clearRect(0, 0, canvas.width, canvas.height)
+          ctx.save()
+          ctx.scale(-1, 1)
+          ctx.translate(-canvas.width, 0)
           ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height)
+          ctx.restore()
 
           if (results.poseLandmarks) {
-            const lm = results.poseLandmarks
+            // Espelhar landmarks para corresponder ao vídeo espelhado
+            const lm = results.poseLandmarks.map(l => ({ ...l, x: 1 - l.x }))
             let isCorrect = true
             
             const refs = { stageRef, smoothedAnglesRef, exerciseDataRef }
@@ -494,7 +499,7 @@ export default function PoseDetector() {
                         ref={canvasRef}
                         width={1280}
                         height={720}
-                        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                        style={{ width: '100%', height: '100%', objectFit: 'contain',  }}
                     />
                     
                     {/* Overlay de Descanso */}
